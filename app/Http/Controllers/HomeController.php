@@ -714,8 +714,49 @@ class HomeController extends Controller
     }
 
     public function getListProds(){
-        $getList = Products::all();
-        return view('workshop.listprod');
+        $htmlPosts = '';
+        $getData = DB::table('products as prod')
+            ->leftjoin('cate_prods as cate','prod.Cate_id','cate.id')
+            ->select('cate.id as cateID','cate.name','cate.alias as cateSlug','prod.id as prodID','prod.title','prod.alias as prodSlug','prod.summary','prod.images','prod.prices','prod.created_at')
+            ->paginate(5);
+//            ->get();
+        if (isset($getData)){
+            foreach ($getData as $data){
+                $htmlPosts .= '<article class="entry post-list">';
+                $htmlPosts .= '<div class="entry__img-holder post-list__img-holder">';
+                $htmlPosts .= '<a href="'.route('hotProd',[$data->prodID,$data->prodSlug]).'">';
+                $htmlPosts .= '<div class="thumb-container thumb-75">';
+                $htmlPosts .= '<img data-src="'.asset('upload/thumbnail/' . $data->images).'" src="'.asset('upload/thumbnail/' . $data->images).'" class="entry__img lazyload" alt="'.$data->title.'">';
+                $htmlPosts .= '</div>';
+                $htmlPosts .= '</a>';
+                $htmlPosts .= '</div>';
+                $htmlPosts .= '<div class="entry__body post-list__body">';
+                $htmlPosts .= '<div class="entry__header">';
+                $htmlPosts .= '<a href="'.route('cateProd',[$data->cateID,$data->cateSlug]).'" class="entry__meta-category">'.$data->name.'</a>';
+                $htmlPosts .= '<h2 class="entry__title">';
+                $htmlPosts .= '<a href="'.route('hotProd',[$data->prodID,$data->prodSlug]).'">'.$data->title.'</a>';
+                $htmlPosts .= '</h2>';
+                $htmlPosts .= '<ul class="entry__meta">';
+                $htmlPosts .= '<li class="entry__meta-author">';
+                $htmlPosts .= '<i class="fas fa-dollar-sign"></i>';
+                $htmlPosts .= '<span style="color: red">'.number_format($data->prices).'VNĐ'.'</span>';
+                $htmlPosts .= '</li>';
+                $htmlPosts .= '<li class="entry__meta-date">';
+                $htmlPosts .= '<i class="ui-date"></i>';
+                $htmlPosts .= date('d-m-Y', strtotime($data->created_at));
+                $htmlPosts .= '</li>';
+                $htmlPosts .= '</ul>';
+                $htmlPosts .= '</div>';
+                $htmlPosts .= '<div class="entry__excerpt">';
+                $htmlPosts .= '<p>'.$data->summary.'</p>';
+                $htmlPosts .= '</div>';
+                $htmlPosts .= '</div>';
+                $htmlPosts .= '</article>';
+            }
+            $htmlPosts .= $getData->links();
+        }
+
+        return view('workshop.listprod')->with(['thisPosts' => $htmlPosts]);
     }
 
 }
