@@ -347,7 +347,7 @@ class HomeController extends Controller
         if (isset($news)) {
             $htmlPost .= '<div class="single-post__entry-header entry__header" style="text-align: justify">';
             foreach ($news as $n) {
-                $htmlPost .= '<a href="#" class="entry__meta-category">' . $n->name . '</a>';
+                $htmlPost .= '<a href="'.route('catePost',[$n->CateID,$n->cateSlug]).'" class="entry__meta-category">' . $n->name . '</a>';
                 $htmlPost .= '<h1 class="single-post__entry-title">' . $n->title . '</h1>';
                 $htmlPost .= '<ul class="entry__meta">';
                 $htmlPost .= '<li class="entry__meta-date"><i class="ui-date"></i>' . date('d-m-Y', strtotime($n->created_at)) . '</li>';
@@ -711,6 +711,11 @@ class HomeController extends Controller
             $htmlCate .= '</div>';
         }
         return view('workshop.categories')->with(['thisCategories' => $htmlCate, 'nameCate' => $getCate]);
+    }
+
+    public function getListProds(){
+        $getList = Products::all();
+        return view('workshop.listprod');
     }
 
 }

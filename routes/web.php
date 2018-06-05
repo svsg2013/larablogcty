@@ -17,6 +17,7 @@ Route::get('/cate/{id}/{cateSlug}', 'HomeController@catepost')->name('catePost')
 Route::get('/tags/{id}/{tagSlug}', 'HomeController@tagpost')->name('tagPost');
 Route::get('/cateprod/{id}/{cateProdSlug}', 'HomeController@getCateProd')->name('cateProd');
 Route::get('/prod/{id}/{prodSlug}', 'HomeController@getDetailProd')->name('hotProd');
+Route::get('listprods','HomeController@getListProds')->name('listProds');
 //backend
 Route::group(['prefix' => 'admin', 'middleware' => 'auth'], function () {
     Route::group(['prefix' => 'panel'], function () {
