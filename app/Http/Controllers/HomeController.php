@@ -5,9 +5,11 @@ namespace App\Http\Controllers;
 use App\Category;
 use App\ChildCate;
 use App\News;
+use App\Products;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use function PHPSTORM_META\map;
+use function Sodium\add;
 
 class HomeController extends Controller
 {
@@ -330,6 +332,7 @@ class HomeController extends Controller
     {
         $htmlPost = "";
         $htmlRelate = "";
+        $htmlPreNex = '';
         $news = DB::table('news as ne')
             ->leftjoin('categories as cate', 'ne.Cate_id', 'cate.id')
             ->select('ne.id as NewsID', 'cate.id as CateID', 'cate.name', 'cate.alias as cateSlug', 'ne.title', 'ne.metaTitle', 'ne.alias', 'ne.summary', 'ne.description', 'ne.content', 'ne.images', 'ne.created_at')
@@ -436,7 +439,31 @@ class HomeController extends Controller
         $previous_id = News::where('id', '<', $id)->max('id');
         $next = News::find($next_id);
         $previous = News::find($previous_id);
-        return view('workshop.single-post')->with(['thisSinglePost' => $htmlPost, 'thisRelate' => $htmlRelate, 'nextNews' => $next, 'preNews' => $previous]);
+
+        $htmlPreNex .= '<nav class="entry-navigation">';
+        $htmlPreNex .= '<div class="clearfix">';
+        $htmlPreNex .= '<div class="entry-navigation--left">';
+        $htmlPreNex .= '<i class="ui-arrow-left"></i>';
+        $htmlPreNex .= '<span class="entry-navigation__label">Previous Post</span>';
+        $htmlPreNex .= '<div class="entry-navigation__link">';
+        if (isset($previous)) {
+            $htmlPreNex .= '<a href="'.route('postNews',[$previous->id,$previous->alias]).'" rel="prev">'.$previous->title.'</a>';
+        }
+        $htmlPreNex .= '</div>';
+        $htmlPreNex .= '</div>';
+        $htmlPreNex .= '<div class="entry-navigation--right">';
+        $htmlPreNex .= '<span class="entry-navigation__label">Next Post</span>';
+        $htmlPreNex .= '<i class="ui-arrow-right"></i>';
+        $htmlPreNex .= '<div class="entry-navigation__link">';
+        if (isset($next)) {
+            $htmlPreNex .= '<a href="' . route('postNews', [$next->id, $next->alias]) . '" rel="prev">'.$next->title.'</a>';
+        }
+        $htmlPreNex .= '</div>';
+        $htmlPreNex .= '</div>';
+        $htmlPreNex .= '</div>';
+        $htmlPreNex .= '</nav>';
+
+        return view('workshop.single-post')->with(['thisSinglePost' => $htmlPost, 'thisRelate' => $htmlRelate,'thisPreNe' => $htmlPreNex]);
     }
 
     public function catepost($id, $slug)
@@ -526,6 +553,164 @@ class HomeController extends Controller
             $htmlTag .= '</div>';
         }
         return view('workshop.tags')->with(['thisTags' => $htmlTag, 'tags' => $getTag]);
+    }
+
+    public function getDetailProd($id){
+        $htmlPost = "";
+        $htmlRelate = "";
+        $htmlPreNex= '';
+        $news = DB::table('products as ne')
+            ->leftjoin('cate_prods as cate', 'ne.Cate_id', 'cate.id')
+            ->select('ne.id as NewsID', 'cate.id as CateID', 'cate.name', 'cate.alias as cateSlug', 'ne.title', 'ne.metaTitle', 'ne.alias', 'ne.summary', 'ne.description', 'ne.content', 'ne.images', 'ne.created_at')
+            ->where('ne.id', $id)
+            ->get();
+        if (isset($news)) {
+            $htmlPost .= '<div class="single-post__entry-header entry__header" style="text-align: justify">';
+            foreach ($news as $n) {
+                $htmlPost .= '<a href="'.route('cateProd',[$n->CateID,$n->cateSlug]).'" class="entry__meta-category">' . $n->name . '</a>';
+                $htmlPost .= '<h1 class="single-post__entry-title">' . $n->title . '</h1>';
+                $htmlPost .= '<ul class="entry__meta">';
+                $htmlPost .= '<li class="entry__meta-date"><i class="ui-date"></i>' . date('d-m-Y', strtotime($n->created_at)) . '</li>';
+                $htmlPost .= '</ul>';
+                $htmlPost .= '</div>';
+                $htmlPost .= '<div class="entry__img-holder">';
+                $htmlPost .= '<img src="' . asset('upload/thumbnail/' . $n->images) . '" alt="' . $n->title . '" class="entry__img">';
+                $htmlPost .= '</div>';
+                $htmlPost .= '<div class="entry__share">';
+                $htmlPost .= '<div class="socials entry__share-socials">';
+                $htmlPost .= '<a href="#" class="social social-facebook entry__share-social social--wide social--medium">';
+                $htmlPost .= '<i class="ui-facebook"></i>';
+                $htmlPost .= '<span class="social__text">Share on Facebook</span>';
+                $htmlPost .= '</a>';
+                $htmlPost .= '<a href="#" class="social social-twitter entry__share-social social--wide social--medium">';
+                $htmlPost .= '<i class="ui-twitter"></i>';
+                $htmlPost .= '<span class="social__text">Share on Twitter</span>';
+                $htmlPost .= '</a>';
+                $htmlPost .= '<a href="#" class="social social-google-plus entry__share-social social--medium">';
+                $htmlPost .= '<i class="ui-google"></i>';
+                $htmlPost .= '</a>';
+                $htmlPost .= '<a href="#" class="social social-pinterest entry__share-social social--medium">';
+                $htmlPost .= '<i class="ui-pinterest"></i>';
+                $htmlPost .= '</a>';
+                $htmlPost .= '</div>';
+                $htmlPost .= '</div>';
+                $htmlPost .= '<div class="entry__article">';
+                $htmlPost .= '<p>' . $n->content . '</p>';
+                //TODO dung ke CateID
+                $relate = DB::table('products as n')
+                    ->leftjoin('categories as cate', 'n.Cate_id', 'cate.id')
+                    ->select('n.id as newsID', 'n.title', 'n.alias', 'n.images')
+                    ->where([
+                        ['cate.id', $n->CateID],
+                        ['n.id', '<>', $id]
+                    ])
+                    ->get();
+            }
+            $htmlPost .= '</div>';
+        }
+
+        //TODO Related Post
+        $htmlRelate .= '<div class="row row-20">';
+        if (count($relate) <> 0) {
+            foreach ($relate as $r) {
+                $htmlRelate .= '<div class="col-md-4">';
+                $htmlRelate .= '<article class="entry">';
+                $htmlRelate .= '<div class="entry__img-holder">';
+                $htmlRelate .= '<a href="'.route('hotProd',[$r->newsID,$r->alias]).'">';
+                $htmlRelate .= '<div class="thumb-container thumb-75">';
+                $htmlRelate .= '<img data-src="' . asset('upload/thumbnail/' . $r->images) . '" src="' . asset('upload/thumbnail/' . $r->images) . '" class="entry__img lazyload" alt="' . $r->title . '">';
+                $htmlRelate .= '</div>';
+                $htmlRelate .= '</a>';
+                $htmlRelate .= '</div>';
+                $htmlRelate .= '<div class="entry__body">';
+                $htmlRelate .= '<div class="entry__header">';
+                $htmlRelate .= '<h2 class="entry__title entry__title--sm">';
+                $htmlRelate .= '<a href="' . route('hotProd', [$r->newsID, $r->alias]) . '">' . $r->title . '</a>';
+                $htmlRelate .= '</h2>';
+                $htmlRelate .= '</div>';
+                $htmlRelate .= '</div>';
+                $htmlRelate .= '</article>';
+                $htmlRelate .= '</div>';
+            }
+        } else {
+            null;
+        }
+        $htmlRelate .= '</div>';
+
+        //TODO Next and Previous news
+        $next_id = Products::where('id', '>', $id)->min('id');
+        $previous_id = Products::where('id', '<', $id)->max('id');
+        $next = Products::find($next_id);
+        $previous = Products::find($previous_id);
+
+        $htmlPreNex .= '<nav class="entry-navigation">';
+        $htmlPreNex .= '<div class="clearfix">';
+        $htmlPreNex .= '<div class="entry-navigation--left">';
+        $htmlPreNex .= '<i class="ui-arrow-left"></i>';
+        $htmlPreNex .= '<span class="entry-navigation__label">Previous Post</span>';
+        $htmlPreNex .= '<div class="entry-navigation__link">';
+        if (isset($previous)) {
+            $htmlPreNex .= '<a href="'.route('hotProd',[$previous->id,$previous->alias]).'" rel="prev">'.$previous->title.'</a>';
+        }
+        $htmlPreNex .= '</div>';
+        $htmlPreNex .= '</div>';
+        $htmlPreNex .= '<div class="entry-navigation--right">';
+        $htmlPreNex .= '<span class="entry-navigation__label">Next Post</span>';
+        $htmlPreNex .= '<i class="ui-arrow-right"></i>';
+        $htmlPreNex .= '<div class="entry-navigation__link">';
+        if (isset($next)) {
+            $htmlPreNex .= '<a href="' . route('hotProd', [$next->id, $next->alias]) . '" rel="prev">'.$next->title.'</a>';
+        }
+        $htmlPreNex .= '</div>';
+        $htmlPreNex .= '</div>';
+        $htmlPreNex .= '</div>';
+        $htmlPreNex .= '</nav>';
+
+        return view('workshop.single-post')->with(['thisSinglePost' => $htmlPost, 'thisRelate' => $htmlRelate, 'thisPreNe'=> $htmlPreNex]);
+    }
+
+    public function getCateProd($id)
+    {
+        $htmlCate = "";
+        $getCate = DB::table('cate_prods')
+            ->select('name')
+            ->where('id', $id)
+            ->get();
+        $getNews = DB::table('products as n')
+            ->leftjoin('cate_prods as cate', 'n.Cate_id', 'cate.id')
+            ->select('cate.name', 'cate.alias as cateSlug', 'cate.id as cateID', 'n.id as newsID', 'n.title', 'n.alias as newsSlug', 'n.summary', 'n.images', 'n.created_at')
+            ->where('cate.id', $id)
+            ->get();
+        foreach ($getNews as $news) {
+            $htmlCate .= '<div class="col-md-6">';
+            $htmlCate .= '<article class="entry">';
+            $htmlCate .= '<div class="entry__img-holder">';
+            $htmlCate .= '<a href="' . route('hotProd', [$news->newsID, $news->newsSlug]) . '">';
+            $htmlCate .= '<div class="thumb-container thumb-75">';
+            $htmlCate .= '<img data-src="' . asset('upload/thumbnail/' . $news->images) . '" src="' . asset('upload/thumbnail/' . $news->images) . '" class="entry__img lazyload" alt="' . $news->title . '">';
+            $htmlCate .= '</div>';
+            $htmlCate .= '</a>';
+            $htmlCate .= '</div>';
+            $htmlCate .= '<div class="entry__body">';
+            $htmlCate .= '<div class="entry__header">';
+            $htmlCate .= '<h2 class="entry__title">';
+            $htmlCate .= '<a href="' . route('hotProd', [$news->newsID, $news->newsSlug]) . '">' . $news->title . '</a>';
+            $htmlCate .= '</h2>';
+            $htmlCate .= '<ul class="entry__meta">';
+            $htmlCate .= '<li class="entry__meta-date">';
+            $htmlCate .= '<i class="ui-date"></i>';
+            $htmlCate .= date('d-m-Y', strtotime($news->created_at));
+            $htmlCate .= '</li>';
+            $htmlCate .= '</ul>';
+            $htmlCate .= '</div>';
+            $htmlCate .= '<div class="entry__excerpt">';
+            $htmlCate .= '<p>' . truncateStringWords($news->summary, 180) . '</p>';
+            $htmlCate .= '</div>';
+            $htmlCate .= '</div>';
+            $htmlCate .= '</article>';
+            $htmlCate .= '</div>';
+        }
+        return view('workshop.categories')->with(['thisCategories' => $htmlCate, 'nameCate' => $getCate]);
     }
 
 }

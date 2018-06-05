@@ -22,30 +22,10 @@
             <!-- standard post -->
             <article class="entry">
                 {!! $thisSinglePost !!}
-                <!-- Prev / Next Post -->
-                <nav class="entry-navigation">
-                    <div class="clearfix">
-                        <div class="entry-navigation--left">
-                            <i class="ui-arrow-left"></i>
-                            <span class="entry-navigation__label">Previous Post</span>
-                            <div class="entry-navigation__link">
-                                @if($preNews)
-                                    <a href="{{route('postNews',[$preNews->id,$preNews->alias])}}" rel="prev">{{$preNews->title}}</a>
-                                @endif
-                            </div>
-                        </div>
-                        <div class="entry-navigation--right">
-                            <span class="entry-navigation__label">Next Post</span>
-                            <i class="ui-arrow-right"></i>
-                            <div class="entry-navigation__link">
-                                @if($nextNews)
-                                    <a href="{{route('postNews',[$nextNews->id,$nextNews->alias])}}" rel="prev">{{$nextNews->title}}</a>
-                                @endif
-                            </div>
-                        </div>
-                    </div>
-                </nav>
 
+                <!-- Prev / Next Post -->
+                        {!! $thisPreNe !!}
+                    <!-- End - Prev / Next Post -->
                 <!-- Related Posts -->
                 <div class="related-posts">
                     <div class="title-wrap mt-40">

@@ -15,8 +15,8 @@ Route::get('/', 'HomeController@index')->name('trangchu');
 Route::get('/news/{id}/{newsSlug}', 'HomeController@singlepost')->name('postNews');
 Route::get('/cate/{id}/{cateSlug}', 'HomeController@catepost')->name('catePost');
 Route::get('/tags/{id}/{tagSlug}', 'HomeController@tagpost')->name('tagPost');
-Route::get('/cateprod/{id}/{cateProdSlug}', 'HomeController@cateprod')->name('cateProd');
-Route::get('/prod/{id}/{prodSlug}', 'HomeController@hotprod')->name('hotProd');
+Route::get('/cateprod/{id}/{cateProdSlug}', 'HomeController@getCateProd')->name('cateProd');
+Route::get('/prod/{id}/{prodSlug}', 'HomeController@getDetailProd')->name('hotProd');
 //backend
 Route::group(['prefix' => 'admin', 'middleware' => 'auth'], function () {
     Route::group(['prefix' => 'panel'], function () {
