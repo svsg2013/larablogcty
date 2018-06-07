@@ -323,9 +323,10 @@ class HomeController extends Controller
                 $htmlHotProd .= '</article>';
             }
         }
+            //TODO Carousel
+        $getCarousel = $this->getCarouselProds();
 
-
-        return view('workshop.index')->with(['thisNews' => $htmlNews, 'infoNews' => $infoCateNews, 'thisNewNews' => $htmlnewNews, 'thisPostList' => $htmlPostList, 'thisPostNews' => $htmlPost, 'thisHotProd' => $htmlHotProd]);
+        return view('workshop.index')->with(['thisNews' => $htmlNews, 'infoNews' => $infoCateNews, 'thisNewNews' => $htmlnewNews, 'thisPostList' => $htmlPostList, 'thisPostNews' => $htmlPost, 'thisHotProd' => $htmlHotProd,'thisCarousel' =>$getCarousel]);
     }
 
     public function singlepost($id)
@@ -596,6 +597,7 @@ class HomeController extends Controller
                 $htmlPost .= '</div>';
                 $htmlPost .= '<div class="entry__article">';
                 $htmlPost .= '<p>' . $n->content . '</p>';
+
                 //TODO dung ke CateID
                 $relate = DB::table('products as n')
                     ->leftjoin('categories as cate', 'n.Cate_id', 'cate.id')
@@ -759,5 +761,44 @@ class HomeController extends Controller
         return view('workshop.listprod')->with(['thisPosts' => $htmlPosts]);
     }
 
-}
+    public function getCarouselProds(){
+        $htmlData= '';
+        $getData= DB::table('products as prod')
+            ->select('id','title','alias','images','prices','created_at')
+            ->where('feature',1)
+            ->take(10)
+            ->get();
+            if (isset($getData)){
+                foreach ($getData as $data){
+                    $htmlData .='<article class="entry">';
+                    $htmlData .='<div class="entry__img-holder">';
+                    $htmlData .='<a href="'.route('hotProd',[$data->id,$data->alias]).'">';
+                    $htmlData .='<div class="thumb-container thumb-75">';
+                    $htmlData .='<img data-src="'.asset('upload/thumbnail/' . $data->images).'" src="'.asset('upload/thumbnail/' . $data->images).'" class="entry__img owl-lazy" alt="" />';
+                    $htmlData .='</div>';
+                    $htmlData .='</a>';
+                    $htmlData .='</div>';
+                    $htmlData .='<div class="entry__body">';
+                    $htmlData .='<div class="entry__header">';
+                    $htmlData .='<h2 class="entry__title entry__title--sm">';
+                    $htmlData .='<a href="'.route('hotProd',[$data->id,$data->alias]).'">'.$data->title.'</a>';
+                    $htmlData .='</h2>';
+                    $htmlData .='<ul class="entry__meta">';
+                    $htmlData .='<li class="entry__meta-date">';
+                    $htmlData .='<i class="ui-date"></i>';
+                    $htmlData .=date('d-m-Y', strtotime($data->created_at));
+                    $htmlData .='</li>';
+                    $htmlData .='<li class="entry__meta-comments">';
+                    $htmlData .='<i class="ui-comments"></i>';
+                    $htmlData .='<span style="color: red">'.number_format($data->prices).'VNĐ'.'</span>';
+                    $htmlData .='</li>';
+                    $htmlData .='</ul>';
+                    $htmlData .='</div>';
+                    $htmlData .='</div>';
+                    $htmlData .='</article>';
+                }
+            }
+        return $htmlData;
+    }
 
+}
