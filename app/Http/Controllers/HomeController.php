@@ -769,7 +769,7 @@ class HomeController extends Controller
             ->take(10)
             ->get();
             if (isset($getData)){
-                foreach ($getData as $data){
+                foreach ($getData as $data){        
                     $htmlData .='<article class="entry">';
                     $htmlData .='<div class="entry__img-holder">';
                     $htmlData .='<a href="'.route('hotProd',[$data->id,$data->alias]).'">';
